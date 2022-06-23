@@ -89,17 +89,17 @@ public class TestProblem8 extends TestProblemAbstract {
     /**
      * Simple constructor.
      */
-    public TestProblem8() {
+    public TestProblem8(final double t0, Vector3D omega, Rotation r, double[] i, double tFinal, double[] errorScale) {
         //Arguments in the super constructor :
         //Initial time, Primary state (o1, o2, o3, q0, q1, q2, q3), Final time, Error scale
-        super(0.0, new double[] {5.0, 0.0, 4.0, 0.9 / FastMath.sqrt(0.9 * 0.9 + 0.437 * 0.437), 0.437 / FastMath.sqrt(0.9 * 0.9 + 0.437 * 0.437), 0.0, 0.0}, 20.0, new double[] { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 });
-        i1 = 3.0 / 8.0;
-        i2 = 1.0 / 2.0;
-        i3 = 5.0 / 8.0;
+        super(t0, new double[] {omega.getX(), omega.getY(), omega.getZ(), r.getQ0(), r.getQ1(), r.getQ2(), r.getQ3()}, tFinal, errorScale);
+     
+        this.i1 = i[0];
+        this.i2 = i[1];
+        this.i3 = i[2];
 
 
         y0 = getInitialState().getPrimaryState();
-        final double t0 = getInitialState().getTime();
 
         final double o12 = y0[0] * y0[0];
         final double o22 = y0[1] * y0[1];
@@ -110,18 +110,18 @@ public class TestProblem8 extends TestProblemAbstract {
 
         Vector3D[] axesP = {Vector3D.PLUS_I, Vector3D.PLUS_J, Vector3D.PLUS_K};
 
-        double[] i = {i1, i2, i3};
+        double[] iP = {i1, i2, i3};
         double[] y0P = y0.clone();
 
-        if (i[0] > i[1]) {
+        if (iP[0] > iP[1]) {
             Vector3D z = axesP[0];
             axesP[0] = axesP[1];
             axesP[1] = z;
             axesP[2] = axesP[2].negate();
 
-            double y = i[0];
-            i[0] = i[1];
-            i[1] = y;
+            double y = iP[0];
+            iP[0] = iP[1];
+            iP[1] = y;
 
             double v = y0P[0];
             y0P[0] = y0P[1];
@@ -129,15 +129,15 @@ public class TestProblem8 extends TestProblemAbstract {
             y0P[2] = -y0P[2];
         }
 
-        if (i[1] > i[2]) {
+        if (iP[1] > iP[2]) {
             Vector3D z = axesP[1];
             axesP[1] = axesP[2];
             axesP[2] = z;
             axesP[0] = axesP[0].negate();
 
-            double y = i[1];
-            i[1] = i[2];
-            i[2] = y;
+            double y = iP[1];
+            iP[1] = iP[2];
+            iP[2] = y;
 
             double v = y0P[1];
             y0P[1] = y0P[2];
@@ -145,15 +145,15 @@ public class TestProblem8 extends TestProblemAbstract {
             y0P[0] = -y0P[0];
         }
 
-        if (i[0] > i[1]) {
+        if (iP[0] > iP[1]) {
             Vector3D z = axesP[0];
             axesP[0] = axesP[1];
             axesP[1] = z;
             axesP[2] = axesP[2].negate();
 
-            double y = i[0];
-            i[0] = i[1];
-            i[1] = y;
+            double y = iP[0];
+            iP[0] = iP[1];
+            iP[1] = y;
 
             double v = y0P[0];
             y0P[0] = y0P[1];
@@ -168,15 +168,15 @@ public class TestProblem8 extends TestProblemAbstract {
             condition = m2/twoE;
         }
 
-        if (condition < i[1]) {
+        if (condition < iP[1]) {
             Vector3D z = axesP[0];
             axesP[0] = axesP[2];
             axesP[2] = z;
             axesP[1] = axesP[1].negate();
 
-            double y = i[0];
-            i[0] = i[2];
-            i[2] = y;
+            double y = iP[0];
+            iP[0] = iP[2];
+            iP[2] = y;
 
             double v = y0P[0];
             y0P[0] = y0P[2];
@@ -184,9 +184,9 @@ public class TestProblem8 extends TestProblemAbstract {
             y0P[1] = - y0P[1];
         }
 
-        i1C = i[0];
-        i2C = i[1];
-        i3C = i[2];
+        i1C = iP[0];
+        i2C = iP[1];
+        i3C = iP[2];
 
         axes = axesP;
 
@@ -210,7 +210,7 @@ public class TestProblem8 extends TestProblemAbstract {
         Rotation r0ConvertedAxis = convertAxes.applyTo(r0);
 
         //Est-il nécéssaire de garder le r0COnvertedAxis qui n'est peut être pas adapté et ne règle peut être pas le problème
-        mAlignedToInert = r0ConvertedAxis.applyInverseTo(mAlignedToBody);
+        mAlignedToInert = r0ConvertedAxis.applyInverseTo(mAlignedToBody.revert());
         //mAlignedToInert = r0.applyInverseTo(mAlignedToBody);        
 
         i32  = i3C - i2C;
@@ -287,9 +287,16 @@ public class TestProblem8 extends TestProblemAbstract {
 
         // Computation of omega
         final CopolarN valuesN = jacobi.valuesN((t - tRef) * tScale);
-        final Vector3D omegaP   = new Vector3D(o1Scale * valuesN.cn(), o2Scale * valuesN.sn(), o3Scale * valuesN.dn());
-        final Vector3D omega    = convertAxes.applyInverseTo(omegaP);
 
+        final Vector3D omegaP   = new Vector3D(-o1Scale * valuesN.cn(), o2Scale * valuesN.sn(), -o3Scale * valuesN.dn());
+        final Vector3D omega    = convertAxes.applyInverseTo(omegaP);
+        //Vector3D omega = new Vector3D(omegaF.getX(),-omegaF.getY(),-omegaF.getZ());
+
+        
+        final double bigK = LegendreEllipticIntegral.bigK(k2);
+        final double T = 4 * bigK * FastMath.sqrt( i1C * i2C * i3C / ((i3C - i2C) * (m2 - twoE * i1C)) );
+        System.out.println("TTTTTT = "+T);
+        
         // Computation of the Euler angles
         final double   psi       = FastMath.atan2(i1C * omegaP.getX(), i2C * omegaP.getY());
         final double   theta     = FastMath.acos(omegaP.getZ() / phiSlope);

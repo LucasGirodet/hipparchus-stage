@@ -477,7 +477,20 @@ public abstract class EmbeddedRungeKuttaIntegratorAbstractTest {
 
 	protected void doTestTorqueFreeMotion(double epsilonOmega, double epsilonQ) {
 
-		final TestProblem8 pb  = new TestProblem8();
+        final double i2 = 3.0 / 8.0;
+        final double i1 = 1.0 / 2.0;
+        final double i3 = 5.0 / 8.0;
+        final double[] i = {i1, i2, i3};
+
+
+        final Vector3D omega = new Vector3D(5.0, 0.0, 4.0);
+        final Rotation r = new Rotation(0.9 / FastMath.sqrt(0.9 * 0.9 + 0.437 * 0.437), 0.437 / FastMath.sqrt(0.9 * 0.9 + 0.437 * 0.437), 0.0, 0.0, true);
+        final double t0 = 0.0;
+        final double tFinal = 20.0;
+        
+        final double[] errorScale = new double[] { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 };
+        
+		final TestProblem8 pb  = new TestProblem8(t0, omega, r, i, tFinal, errorScale);
 		double minStep = 1.0e-10;
 		double maxStep = pb.getFinalTime() - pb.getInitialState().getTime();
 		double[] vecAbsoluteTolerance = { 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14 };
@@ -590,25 +603,27 @@ public abstract class EmbeddedRungeKuttaIntegratorAbstractTest {
 				//        		    		 RyuDouble.doubleToString(state.getTime()),
 				//        		    		 RyuDouble.doubleToString(d));
 
-				        		     out.format(Locale.US, "%f %f %f %f %f %f %f%n",
+				        		     out.format(Locale.US, "%f %f %f %f %f %f %f %f %f%n",
 				        		    		 state.getTime(),
                                              state.getPrimaryState()[0],
                                              state.getPrimaryState()[1],
                                              state.getPrimaryState()[2],
                                              theoreticalY[0],
                                              theoreticalY[1],
-                                             theoreticalY[2]);
+                                             theoreticalY[2],
+                                             FastMath.sqrt(state.getPrimaryState()[0] *state.getPrimaryState()[0] + state.getPrimaryState()[1] * state.getPrimaryState()[1] +state.getPrimaryState()[2] * state.getPrimaryState()[2]),
+                                             FastMath.sqrt(theoreticalY[0] *theoreticalY[0]+theoreticalY[1]*theoreticalY[1]+theoreticalY[2]*theoreticalY[2]));
 
-				//        		        		out.format(Locale.US, "%s %s %s %s %s %s %s %s %s%n",
-				//        		        				RyuDouble.doubleToString(state.getTime()),
-				//        		        				RyuDouble.doubleToString(state.getPrimaryState()[3]),
-				//        		        				RyuDouble.doubleToString(state.getPrimaryState()[4]),
-				//        		        				RyuDouble.doubleToString(state.getPrimaryState()[5]),
-				//        		        				RyuDouble.doubleToString(state.getPrimaryState()[6]),
-				//        		        				RyuDouble.doubleToString(theoreticalY[3]),
-				//        		        				RyuDouble.doubleToString(theoreticalY[4]),
-				//        		        				RyuDouble.doubleToString(theoreticalY[5]),
-				//        		        				RyuDouble.doubleToString(theoreticalY[6]));
+//				        		        		out.format(Locale.US, "%s %s %s %s %s %s %s %s %s%n",
+//				        		        				RyuDouble.doubleToString(state.getTime()),
+//				        		        				RyuDouble.doubleToString(state.getPrimaryState()[3]),
+//				        		        				RyuDouble.doubleToString(state.getPrimaryState()[4]),
+//				        		        				RyuDouble.doubleToString(state.getPrimaryState()[5]),
+//				        		        				RyuDouble.doubleToString(state.getPrimaryState()[6]),
+//				        		        				RyuDouble.doubleToString(theoreticalY[3]),
+//				        		        				RyuDouble.doubleToString(theoreticalY[4]),
+//				        		        				RyuDouble.doubleToString(theoreticalY[5]),
+//				        		        				RyuDouble.doubleToString(theoreticalY[6]));
 
 		        final TestProblem8.TfmState tfm = pb.computeTorqueFreeMotion(state.getTime());
                 phiT   = tfm.getPhi();
@@ -635,7 +650,7 @@ public abstract class EmbeddedRungeKuttaIntegratorAbstractTest {
 //							RyuDouble.doubleToString(lastThetaT),
 //							RyuDouble.doubleToString(lastPsiN), 
 //							RyuDouble.doubleToString(lastPsiT));
-
+//
 				}
 				current += outputStep;
 
@@ -676,7 +691,9 @@ public abstract class EmbeddedRungeKuttaIntegratorAbstractTest {
             out.format(Locale.US, "     $data using 1:3 with lines lc 2 title 'Ω₂ numerical', \\%n");
             out.format(Locale.US, "     $data using 1:6 with points pt 4 lc 2 title 'Ω₂ theoretical', \\%n");
             out.format(Locale.US, "     $data using 1:4 with lines lc 3 title 'Ω₃ numerical', \\%n");
-            out.format(Locale.US, "     $data using 1:7 with points pt 4 lc 3 title 'Ω₃ theoretical'%n");
+            out.format(Locale.US, "     $data using 1:7 with points pt 4 lc 3 title 'Ω₃ theoretical',\\%n");
+            out.format(Locale.US, "     $data using 1:8 with lines lc 4 title 'Ω numerical',\\%n");
+            out.format(Locale.US, "     $data using 1:9 with points pt 4 lc 4 title 'Ω theoretical'%n");
 
 			//        	out.format(Locale.US, " plot $data using 1:2 with linespoints title 'φ numerical',\\%n ");
 			//        	out.format(Locale.US, "$data using 1:3 with lines dt 2 title 'φ theoretical'%n ");
@@ -700,7 +717,26 @@ public abstract class EmbeddedRungeKuttaIntegratorAbstractTest {
 
 	protected void doTestTorqueFreeMotionDebug(double epsilonOmega, double epsilonQ) {
 
-		final TestProblem8Debug pb  = new TestProblem8Debug();
+        final double i1 = 3.0 / 8.0;
+        final double i2 = 1.0 / 2.0;
+        final double i3 = 5.0 / 8.0;
+        final double[] i = {i1, i2, i3};
+        
+        final double i1DEUX = 3.0 / 8.0;
+        final double i2DEUX = 1.0 / 2.0;
+        final double i3DEUX = 5.0 / 8.0;
+        final double[] iDEUX = {i2DEUX, i1DEUX, i3DEUX};
+
+        final Vector3D omega = new Vector3D(5.0, 0.0, 4.0);
+        final Rotation r = new Rotation(0.9 / FastMath.sqrt(0.9 * 0.9 + 0.437 * 0.437), 0.437 / FastMath.sqrt(0.9 * 0.9 + 0.437 * 0.437), 0.0, 0.0, true);
+	    final Vector3D omegaDEUX = new Vector3D(5.0, 0.0, 4.0);
+        final Rotation rDEUX = new Rotation(0.9 / FastMath.sqrt(0.9 * 0.9 + 0.437 * 0.437), 0.437 / FastMath.sqrt(0.9 * 0.9 + 0.437 * 0.437), 0.0, 0.0, true);
+        final double t0 = 0.0;
+        final double tFinal = 20.0;
+        
+        final double[] errorScale = new double[] { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 };
+        
+        final TestProblem8Debug pb  = new TestProblem8Debug(t0, omega, r, i, omegaDEUX, rDEUX, iDEUX, tFinal, errorScale);
 		double minStep = 1.0e-10;
 		double maxStep = pb.getFinalTime() - pb.getInitialState().getTime();
 		double[] vecAbsoluteTolerance = { 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14 };
@@ -894,43 +930,43 @@ public abstract class EmbeddedRungeKuttaIntegratorAbstractTest {
 //                           RyuDouble.doubleToString(sign * tfm[1].getRotation().getQ2()),
 //                           RyuDouble.doubleToString(sign * tfm[1].getRotation().getQ3()));
 
-				phiT   = tfm[0].getPhi();
-				thetaT = tfm[0].getTheta();
-				psiT   = tfm[0].getPsi();
-
-				phiTDEUX   = tfm[1].getPhi();
-				thetaTDEUX = tfm[1].getTheta();
-				psiTDEUX   = tfm[1].getPsi();
-
-				Rotation r = new Rotation(state.getPrimaryState()[3],state.getPrimaryState()[4],state.getPrimaryState()[5],state.getPrimaryState()[6], true);
-				Rotation rDEUX = new Rotation(state.getPrimaryState()[10],state.getPrimaryState()[11],state.getPrimaryState()[12],state.getPrimaryState()[13], true);
-
-
-				if (state.getTime() > 0.001) {
-
-					double[] angles = tfm[0].getConvertAxes().applyTo(r.applyTo(tfm[0].getMAlignedToInert())).
-					                  getAngles(RotationOrder.ZXZ, RotationConvention.FRAME_TRANSFORM);
-
-
-					double[] anglesDEUX = tfm[1].getConvertAxes().applyTo(rDEUX.applyTo(tfm[1].getMAlignedToInert())).
-                                          getAngles(RotationOrder.ZXZ, RotationConvention.FRAME_TRANSFORM);
-
-
-					lastPhiN = MathUtils.normalizeAngle(angles[0], lastPhiN);
-					lastThetaN = MathUtils.normalizeAngle(angles[1], lastThetaN);
-					lastPsiN = MathUtils.normalizeAngle(angles[2], lastPsiN);
-					lastPhiT = MathUtils.normalizeAngle(phiT, lastPhiT);
-					lastThetaT = MathUtils.normalizeAngle(thetaT, lastThetaT);
-					lastPsiT = MathUtils.normalizeAngle(psiT, lastPsiT);
-
-
-					lastPhiNDEUX = MathUtils.normalizeAngle(anglesDEUX[0], lastPhiNDEUX);
-					lastThetaNDEUX = MathUtils.normalizeAngle(anglesDEUX[1], lastThetaNDEUX);
-					lastPsiNDEUX = MathUtils.normalizeAngle(anglesDEUX[2], lastPsiNDEUX);
-					lastPhiTDEUX = MathUtils.normalizeAngle(phiTDEUX, lastPhiTDEUX);
-					lastThetaTDEUX = MathUtils.normalizeAngle(thetaTDEUX, lastThetaTDEUX);
-					lastPsiTDEUX = MathUtils.normalizeAngle(psiTDEUX, lastPsiTDEUX);
-
+//				phiT   = tfm[0].getPhi();
+//				thetaT = tfm[0].getTheta();
+//				psiT   = tfm[0].getPsi();
+//
+//				phiTDEUX   = tfm[1].getPhi();
+//				thetaTDEUX = tfm[1].getTheta();
+//				psiTDEUX   = tfm[1].getPsi();
+//
+//				Rotation r = new Rotation(state.getPrimaryState()[3],state.getPrimaryState()[4],state.getPrimaryState()[5],state.getPrimaryState()[6], true);
+//				Rotation rDEUX = new Rotation(state.getPrimaryState()[10],state.getPrimaryState()[11],state.getPrimaryState()[12],state.getPrimaryState()[13], true);
+//
+//
+//				if (state.getTime() > 0.001) {
+//
+//					double[] angles = tfm[0].getConvertAxes().applyTo(r.applyTo(tfm[0].getMAlignedToInert())).
+//					                  getAngles(RotationOrder.ZXZ, RotationConvention.FRAME_TRANSFORM);
+//
+//
+//					double[] anglesDEUX = tfm[1].getConvertAxes().applyTo(rDEUX.applyTo(tfm[1].getMAlignedToInert())).
+//                                          getAngles(RotationOrder.ZXZ, RotationConvention.FRAME_TRANSFORM);
+//
+//
+//					lastPhiN = MathUtils.normalizeAngle(angles[0], lastPhiN);
+//					lastThetaN = MathUtils.normalizeAngle(angles[1], lastThetaN);
+//					lastPsiN = MathUtils.normalizeAngle(angles[2], lastPsiN);
+//					lastPhiT = MathUtils.normalizeAngle(phiT, lastPhiT);
+//					lastThetaT = MathUtils.normalizeAngle(thetaT, lastThetaT);
+//					lastPsiT = MathUtils.normalizeAngle(psiT, lastPsiT);
+//
+//
+//					lastPhiNDEUX = MathUtils.normalizeAngle(anglesDEUX[0], lastPhiNDEUX);
+//					lastThetaNDEUX = MathUtils.normalizeAngle(anglesDEUX[1], lastThetaNDEUX);
+//					lastPsiNDEUX = MathUtils.normalizeAngle(anglesDEUX[2], lastPsiNDEUX);
+//					lastPhiTDEUX = MathUtils.normalizeAngle(phiTDEUX, lastPhiTDEUX);
+//					lastThetaTDEUX = MathUtils.normalizeAngle(thetaTDEUX, lastThetaTDEUX);
+//					lastPsiTDEUX = MathUtils.normalizeAngle(psiTDEUX, lastPsiTDEUX);
+//
 //					out.format(Locale.US, "%s %s %s %s %s %s %s %s %s %s %s %s %s%n",
 //							RyuDouble.doubleToString(state.getTime()),
 //							RyuDouble.doubleToString(lastPhiN), 
@@ -947,8 +983,8 @@ public abstract class EmbeddedRungeKuttaIntegratorAbstractTest {
 //							RyuDouble.doubleToString(lastThetaTDEUX),
 //							RyuDouble.doubleToString(lastPsiNDEUX), 
 //							RyuDouble.doubleToString(lastPsiTDEUX));
-
-				}
+//
+//				}
 				current += outputStep;
 
 			}

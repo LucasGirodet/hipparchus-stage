@@ -132,22 +132,24 @@ public class TestProblem8Debug extends TestProblemAbstract {
     /**
      * Simple constructor.
      */
-    public TestProblem8Debug() {
+
+    public TestProblem8Debug(final double t0, Vector3D omega, Rotation r, double[] i, Vector3D omegaDEUX, Rotation rDEUX, double[] iDEUX, double tFinal, double[] errorScale) {
         //Arguments in the super constructor :
         //Initial time, Primary state (o1, o2, o3, q0, q1, q2, q3), Final time, Error scale
-        super(0.0, new double[] {5.0, 0.0, 4.0, 0.9 / FastMath.sqrt(0.9 * 0.9 + 0.437 * 0.437), 0.437 / FastMath.sqrt(0.9 * 0.9 + 0.437 * 0.437), 0.0, 0.0,   0.0, 5.0, -4.0, -0.3088560588509295, 0.6360879930568342, 0.6360879930568341, 0.3088560588509294 }, 20.0, new double[] { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 });
+//        super(0.0, new double[] {5.0, 0.0, 4.0, 0.9 / FastMath.sqrt(0.9 * 0.9 + 0.437 * 0.437), 0.437 / FastMath.sqrt(0.9 * 0.9 + 0.437 * 0.437), 0.0, 0.0,   0.0, 5.0, -4.0, -0.3088560588509295, 0.6360879930568342, 0.6360879930568341, 0.3088560588509294 }, 20.0, new double[] { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 });
 //        super(0.0, new double[] {5.0, 0.0, 4.0, 0.9 / FastMath.sqrt(0.9 * 0.9 + 0.437 * 0.437), 0.437 / FastMath.sqrt(0.9 * 0.9 + 0.437 * 0.437), 0.0, 0.0,   5.0, 0.0, 4.0, 0.9 / FastMath.sqrt(0.9 * 0.9 + 0.437 * 0.437), 0.437 / FastMath.sqrt(0.9 * 0.9 + 0.437 * 0.437), 0.0, 0.0}, 20.0, new double[] { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 });
+        super(t0, new double[] {omega.getX(), omega.getY(), omega.getZ(), r.getQ0(), r.getQ1(), r.getQ2(), r.getQ3(), omegaDEUX.getX(), omegaDEUX.getY(), omegaDEUX.getZ(), rDEUX.getQ0(), rDEUX.getQ1(), rDEUX.getQ2(), rDEUX.getQ3()}, tFinal, errorScale);
 
-        i1 = 3.0 / 8.0;
-        i2 = 1.0 / 2.0;
-        i3 = 5.0 / 8.0;
+        
+        this.i1 = i[0];
+        this.i2 = i[1];
+        this.i3 = i[2];
 
-        i2DEUX = 3.0 / 8.0;
-        i1DEUX = 1.0 / 2.0;
-        i3DEUX = 5.0 / 8.0;
+        this.i1DEUX =  iDEUX[0];
+        this.i2DEUX =  iDEUX[1];
+        this.i3DEUX =  iDEUX[2];
 
         y0 = getInitialState().getPrimaryState();
-        final double t0 = getInitialState().getTime();
 
         //1er état
 
@@ -228,7 +230,8 @@ public class TestProblem8Debug extends TestProblemAbstract {
         i3CDEUX = sortedDEUX.i3;
 
         // convert initial conditions to Euler angles such the M is aligned with Z in computation frame
-        final Vector3D omega0BodyDEUX = sortedDEUX.omega;
+        Vector3D omega0BodyDEUX = sortedDEUX.omega;
+        //omega0BodyDEUX = new Vector3D (sortedDEUX.omega.getX(), sortedDEUX.omega.getY(), -sortedDEUX.omega.getZ());
         final Vector3D m0BodyDEUX     = new Vector3D(i1CDEUX * omega0BodyDEUX.getX(), i2CDEUX * omega0BodyDEUX.getY(), i3CDEUX * omega0BodyDEUX.getZ());
 
         final double   phi0DEUX       = 0; // this angle can be set arbitrarily, so 0 is a fair value (Eq. 37.13 - 37.14)
@@ -283,25 +286,30 @@ public class TestProblem8Debug extends TestProblemAbstract {
             final Rotation ij = new Rotation(Vector3D.PLUS_I, Vector3D.PLUS_J, Vector3D.PLUS_J, Vector3D.PLUS_I);
             sorted = new Sorted(sorted.i2, sorted.i1, sorted.i3, ij.applyTo(sorted.omega),
                                 ij.applyTo(sorted.rotation), ij.applyTo(sorted.convertAxes));
+            System.out.println("Sorted omega 1  : "+sorted.omega);
         }
 
         if (sorted.i2 > sorted.i3) {
             final Rotation jk = new Rotation(Vector3D.PLUS_J, Vector3D.PLUS_K, Vector3D.PLUS_K, Vector3D.PLUS_J);
             sorted = new Sorted(sorted.i2, sorted.i1, sorted.i3, jk.applyTo(sorted.omega),
                                 jk.applyTo(sorted.rotation), jk.applyTo(sorted.convertAxes));
+            System.out.println("Sorted omega 2  : "+sorted.omega);
+
         }
 
         if (sorted.i1 > sorted.i2) {
             final Rotation ij = new Rotation(Vector3D.PLUS_I, Vector3D.PLUS_J, Vector3D.PLUS_J, Vector3D.PLUS_I);
             sorted = new Sorted(sorted.i2, sorted.i1, sorted.i3, ij.applyTo(sorted.omega),
                                 ij.applyTo(sorted.rotation), ij.applyTo(sorted.convertAxes));
-        }
+            System.out.println("Sorted omega 3  : "+sorted.omega);
+ }
 
         if (m2Init / twoEInit < sorted.i2) {
             final Rotation ik = new Rotation(Vector3D.PLUS_I, Vector3D.PLUS_K, Vector3D.PLUS_K, Vector3D.PLUS_I);
             sorted = new Sorted(sorted.i2, sorted.i1, sorted.i3, ik.applyTo(sorted.omega),
                                 ik.applyTo(sorted.rotation), ik.applyTo(sorted.convertAxes));
-        }
+            System.out.println("Sorted omega final  : "+sorted.omega);
+}
 
         return sorted;
 
@@ -536,5 +544,5 @@ public class TestProblem8Debug extends TestProblemAbstract {
             return mAlignedToInert;
         }
     }
-
+    
 }//Fin du programme
