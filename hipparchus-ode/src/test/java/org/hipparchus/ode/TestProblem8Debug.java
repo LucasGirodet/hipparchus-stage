@@ -231,6 +231,7 @@ public class TestProblem8Debug extends TestProblemAbstract {
 
         // convert initial conditions to Euler angles such the M is aligned with Z in computation frame
         Vector3D omega0BodyDEUX = sortedDEUX.omega;
+        final Rotation r0DEUX = sortedDEUX.rotation;
         //omega0BodyDEUX = new Vector3D (sortedDEUX.omega.getX(), sortedDEUX.omega.getY(), -sortedDEUX.omega.getZ());
         final Vector3D m0BodyDEUX     = new Vector3D(i1CDEUX * omega0BodyDEUX.getX(), i2CDEUX * omega0BodyDEUX.getY(), i3CDEUX * omega0BodyDEUX.getZ());
 
@@ -244,7 +245,8 @@ public class TestProblem8Debug extends TestProblemAbstract {
 
         convertAxesDEUX = sortedDEUX.convertAxes;;
 
-        final Rotation r0ConvertedAxisDEUX = sortedDEUX.rotation;
+        //final Rotation r0ConvertedAxisDEUX = sortedDEUX.rotation;
+        final Rotation r0ConvertedAxisDEUX = convertAxesDEUX.applyTo(r0DEUX);
         mAlignedToInertDEUX = r0ConvertedAxisDEUX.applyInverseTo(mAlignedToBodyDEUX);
         //mAlignedToInert = r0.applyInverseTo(mAlignedToBody);
 
