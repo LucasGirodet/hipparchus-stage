@@ -480,7 +480,6 @@ public abstract class EmbeddedRungeKuttaIntegratorAbstractTest {
         final double i2 = 3.0 / 8.0;
         final double i1 = 1.0 / 2.0;
         final double i3 = 5.0 / 8.0;
-        final double[] i = {i1, i2, i3};
 
 
         final Vector3D omega = new Vector3D(5.0, 0.0, 4.0);
@@ -488,9 +487,8 @@ public abstract class EmbeddedRungeKuttaIntegratorAbstractTest {
         final double t0 = 0.0;
         final double tFinal = 20.0;
         
-        final double[] errorScale = new double[] { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 };
         
-		final TestProblem8 pb  = new TestProblem8(t0, omega, r, i, tFinal, errorScale);
+		final TestProblem8 pb  = new TestProblem8(t0, tFinal, omega, r, i1, i2, i3);
 		double minStep = 1.0e-10;
 		double maxStep = pb.getFinalTime() - pb.getInitialState().getTime();
 		double[] vecAbsoluteTolerance = { 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14 };
@@ -725,7 +723,6 @@ public abstract class EmbeddedRungeKuttaIntegratorAbstractTest {
         final double i2DEUX = 3.0 / 8.0;
         final double i1DEUX = 1.0 / 2.0;
         final double i3DEUX = 5.0 / 8.0;
-        final double[] iDEUX = {i1DEUX, i2DEUX, i3DEUX};
 
         final Vector3D omega = new Vector3D(5.0, 0.0, 4.0);
         final Rotation r = new Rotation(0.9 / FastMath.sqrt(0.9 * 0.9 + 0.437 * 0.437), 0.437 / FastMath.sqrt(0.9 * 0.9 + 0.437 * 0.437), 0.0, 0.0, true);
@@ -737,9 +734,8 @@ public abstract class EmbeddedRungeKuttaIntegratorAbstractTest {
         final double t0 = 0.0;
         final double tFinal = 20.0;
         
-        final double[] errorScale = new double[] { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 };
         
-        final TestProblem8Debug pb  = new TestProblem8Debug(t0, omega, r, i, omegaDEUX, rDEUX, iDEUX, tFinal, errorScale);
+        final TestProblem8Debug pb  = new TestProblem8Debug(t0, tFinal, omega, r, i1, i2, i3, omegaDEUX, rDEUX, i1DEUX, i2DEUX, i3DEUX);
 		double minStep = 1.0e-10;
 		double maxStep = pb.getFinalTime() - pb.getInitialState().getTime();
 		double[] vecAbsoluteTolerance = { 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14 };
