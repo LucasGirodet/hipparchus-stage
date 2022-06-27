@@ -601,16 +601,16 @@ public abstract class EmbeddedRungeKuttaIntegratorAbstractTest {
 				//        		    		 RyuDouble.doubleToString(state.getTime()),
 				//        		    		 RyuDouble.doubleToString(d));
 
-				        		     out.format(Locale.US, "%f %f %f %f %f %f %f %f %f%n",
-				        		    		 state.getTime(),
-                                             state.getPrimaryState()[0],
-                                             state.getPrimaryState()[1],
-                                             state.getPrimaryState()[2],
-                                             theoreticalY[0],
-                                             theoreticalY[1],
-                                             theoreticalY[2],
-                                             FastMath.sqrt(state.getPrimaryState()[0] *state.getPrimaryState()[0] + state.getPrimaryState()[1] * state.getPrimaryState()[1] +state.getPrimaryState()[2] * state.getPrimaryState()[2]),
-                                             FastMath.sqrt(theoreticalY[0] *theoreticalY[0]+theoreticalY[1]*theoreticalY[1]+theoreticalY[2]*theoreticalY[2]));
+//				        		     out.format(Locale.US, "%f %f %f %f %f %f %f %f %f%n",
+//				        		    		 state.getTime(),
+//                                             state.getPrimaryState()[0],
+//                                             state.getPrimaryState()[1],
+//                                             state.getPrimaryState()[2],
+//                                             theoreticalY[0],
+//                                             theoreticalY[1],
+//                                             theoreticalY[2],
+//                                             FastMath.sqrt(state.getPrimaryState()[0] *state.getPrimaryState()[0] + state.getPrimaryState()[1] * state.getPrimaryState()[1] +state.getPrimaryState()[2] * state.getPrimaryState()[2]),
+//                                             FastMath.sqrt(theoreticalY[0] *theoreticalY[0]+theoreticalY[1]*theoreticalY[1]+theoreticalY[2]*theoreticalY[2]));
 
 //				        		        		out.format(Locale.US, "%s %s %s %s %s %s %s %s %s%n",
 //				        		        				RyuDouble.doubleToString(state.getTime()),
@@ -640,14 +640,14 @@ public abstract class EmbeddedRungeKuttaIntegratorAbstractTest {
 					lastPhiT = MathUtils.normalizeAngle(phiT, lastPhiT);
 					lastThetaT = MathUtils.normalizeAngle(thetaT, lastThetaT);
 					lastPsiT = MathUtils.normalizeAngle(psiT, lastPsiT);
-//					out.format(Locale.US, "%s %s %s %s %s %s %s%n",
-//							RyuDouble.doubleToString(state.getTime()),
-//							RyuDouble.doubleToString(lastPhiN), 
-//							RyuDouble.doubleToString(lastPhiT),
-//							RyuDouble.doubleToString(lastThetaN), 
-//							RyuDouble.doubleToString(lastThetaT),
-//							RyuDouble.doubleToString(lastPsiN), 
-//							RyuDouble.doubleToString(lastPsiT));
+					out.format(Locale.US, "%s %s %s %s %s %s %s%n",
+							RyuDouble.doubleToString(state.getTime()),
+							RyuDouble.doubleToString(lastPhiN), 
+							RyuDouble.doubleToString(lastPhiT),
+							RyuDouble.doubleToString(lastThetaN), 
+							RyuDouble.doubleToString(lastThetaT),
+							RyuDouble.doubleToString(lastPsiN), 
+							RyuDouble.doubleToString(lastPsiT));
 
 				}
 				current += outputStep;
@@ -677,21 +677,21 @@ public abstract class EmbeddedRungeKuttaIntegratorAbstractTest {
 			//        	out.format(Locale.US, "$data using 1:($4-$5) with lines title 'θ difference',\\%n ");
 			//        	out.format(Locale.US, "$data using 1:($6-$7) with lines title 'ψ difference'%n ");
 
-//			out.format(Locale.US, " plot $data using 1:2 with lines lc 1 title 'φN',\\%n ");
-//			out.format(Locale.US, "$data using 1:3 with points pt 4 lc 1 title 'φT',\\%n ");
-//			out.format(Locale.US, "$data using 1:4 with lines lc 2 title 'θN',\\%n ");
-//			out.format(Locale.US, "$data using 1:5 with points pt 4 lc 2 title 'θT',\\%n ");
-//			out.format(Locale.US, "$data using 1:6 with lines lc 3 title 'ψN',\\%n ");
-//			out.format(Locale.US, "$data using 1:7 with points lc 3 pt 4 title 'ψT'%n ");
+			out.format(Locale.US, " plot $data using 1:2 with lines lc 1 title 'φN',\\%n ");
+			out.format(Locale.US, "$data using 1:3 with points pt 4 lc 1 title 'φT',\\%n ");
+			out.format(Locale.US, "$data using 1:4 with lines lc 2 title 'θN',\\%n ");
+			out.format(Locale.US, "$data using 1:5 with points pt 4 lc 2 title 'θT',\\%n ");
+			out.format(Locale.US, "$data using 1:6 with lines lc 3 title 'ψN',\\%n ");
+			out.format(Locale.US, "$data using 1:7 with points lc 3 pt 4 title 'ψT'%n ");
 
-            out.format(Locale.US, "plot $data using 1:2 with lines lc 1 title 'Ω₁ numerical', \\%n");
-            out.format(Locale.US, "     $data using 1:5 with points pt 4 lc 1 title 'Ω₁ theoretical', \\%n");
-            out.format(Locale.US, "     $data using 1:3 with lines lc 2 title 'Ω₂ numerical', \\%n");
-            out.format(Locale.US, "     $data using 1:6 with points pt 4 lc 2 title 'Ω₂ theoretical', \\%n");
-            out.format(Locale.US, "     $data using 1:4 with lines lc 3 title 'Ω₃ numerical', \\%n");
-            out.format(Locale.US, "     $data using 1:7 with points pt 4 lc 3 title 'Ω₃ theoretical',\\%n");
-            out.format(Locale.US, "     $data using 1:8 with lines lc 4 title 'Ω numerical',\\%n");
-            out.format(Locale.US, "     $data using 1:9 with points pt 4 lc 4 title 'Ω theoretical'%n");
+//            out.format(Locale.US, "plot $data using 1:2 with lines lc 1 title 'Ω₁ numerical', \\%n");
+//            out.format(Locale.US, "     $data using 1:5 with points pt 4 lc 1 title 'Ω₁ theoretical', \\%n");
+//            out.format(Locale.US, "     $data using 1:3 with lines lc 2 title 'Ω₂ numerical', \\%n");
+//            out.format(Locale.US, "     $data using 1:6 with points pt 4 lc 2 title 'Ω₂ theoretical', \\%n");
+//            out.format(Locale.US, "     $data using 1:4 with lines lc 3 title 'Ω₃ numerical', \\%n");
+//            out.format(Locale.US, "     $data using 1:7 with points pt 4 lc 3 title 'Ω₃ theoretical',\\%n");
+//            out.format(Locale.US, "     $data using 1:8 with lines lc 4 title 'Ω numerical',\\%n");
+//            out.format(Locale.US, "     $data using 1:9 with points pt 4 lc 4 title 'Ω theoretical'%n");
 
 			//        	out.format(Locale.US, " plot $data using 1:2 with linespoints title 'φ numerical',\\%n ");
 			//        	out.format(Locale.US, "$data using 1:3 with lines dt 2 title 'φ theoretical'%n ");

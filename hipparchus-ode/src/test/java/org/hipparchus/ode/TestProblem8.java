@@ -301,9 +301,9 @@ public class TestProblem8 extends TestProblemAbstract {
 		// Computation of omega
 		final CopolarN valuesN = jacobi.valuesN((t - tRef) * tScale);
 
-		final Vector3D omegaP   = new Vector3D(-o1Scale * valuesN.cn(), o2Scale * valuesN.sn(), -o3Scale * valuesN.dn());
+		//final Vector3D omegaP   = new Vector3D(o1Scale * valuesN.cn(),-o2Scale * valuesN.sn(),o3Scale * valuesN.dn());
+		final Vector3D omegaP = new Vector3D(omega(t)[0], omega(t)[1], omega(t)[2]);
 		final Vector3D omega    = convertAxes.applyInverseTo(omegaP);
-		//Vector3D omega = new Vector3D(omegaF.getX(),-omegaF.getY(),-omegaF.getZ());
 
 
 
@@ -415,6 +415,157 @@ public class TestProblem8 extends TestProblemAbstract {
 		public Rotation getMAlignedToInert() {
 			return mAlignedToInert;
 		}
+	}
+	
+	private double[] omega(double t) {
+		
+		final double omegaSign1;
+		final double omegaSign2;
+		final double omegaSign3;
+		
+		final CopolarN valuesN = jacobi.valuesN((t - tRef) * tScale);
+
+		final double omega1 = o1Scale * valuesN.cn();
+		final double omega2 = o2Scale * valuesN.sn();
+		final double omega3 = o3Scale * valuesN.dn();
+		
+		final double condition = m2/twoE;
+		
+		if (condition > i2) {
+			if (i1 < i2 && i2 < i3) {//CAS 1
+				omegaSign1 = 1.0;
+				omegaSign2 = 1.0;
+				omegaSign3 = 1.0;
+				
+				return new double[] {
+						omegaSign1 * omega1,
+						omegaSign2 * omega2,
+						omegaSign3 * omega3
+				};
+			}
+			if (i1 < i3 && i3 < i2) {//CAS 3 //Déphasage quand omega2 /= 0 //A REFAIRE
+				omegaSign1 = 1.0;
+				omegaSign2 = -1.0;
+				omegaSign3 = 1.0;
+				return new double[] {
+						omegaSign1 * omega1,
+						omegaSign2 * omega2,
+						omegaSign3 * omega3
+				};
+			}	
+			if (i2 < i1 && i1 < i3) {//CAS 5
+				omegaSign1 = -1.0;
+				omegaSign2 = 1.0;
+				omegaSign3 = -1.0;
+				
+				return new double[] {
+						omegaSign1 * omega1,
+						omegaSign2 * omega2,
+						omegaSign3 * omega3
+				};
+			}
+			if (i2 < i3 && i3 < i1) {//CAS 7
+				omegaSign1 = -1.0;
+				omegaSign2 = -1.0;
+				omegaSign3 = 1.0;
+				
+				return new double[] {
+						omegaSign1 * omega2,
+						omegaSign2 * omega3,
+						omegaSign3 * omega1
+				};
+			}
+			if (i3 < i1 && i1 < i2) { //CAS 9 //Dephasage quand omega2 /= 0 //A REFAIRE 
+				omegaSign1 = 1.0;
+				omegaSign2 = -1.0;
+				omegaSign3 = 1.0;
+				
+				return new double[] {
+						omegaSign1 * omega1,
+						omegaSign2 * omega2,
+						omegaSign3 * omega3
+				};
+			}
+			if (i3 < i2 && i2 < i1) { //CAS 11
+				omegaSign1 = -1.0;
+				omegaSign2 = 1.0;
+				omegaSign3 = -1.0;
+				
+				return new double[] {
+						omegaSign1 * omega1,
+						omegaSign2 * omega2,
+						omegaSign3 * omega3
+				};
+			}
+		}
+		
+		if(condition < i2) {
+			if (i1 < i2 && i2 < i3) { //CAS 2
+				omegaSign1 = 1.0;
+				omegaSign2 = -1.0;
+				omegaSign3 = 1.0;
+				return new double[] {
+						omegaSign1 * omega1,
+						omegaSign2 * omega2,
+						omegaSign3 * omega3
+				};
+			}
+			if (i1 < i3 && i3 < i2) {//CAS 4
+				omegaSign1 = 1.0;
+				omegaSign2 = 1.0;
+				omegaSign3 = -1.0;
+				return new double[] {
+						omegaSign1 * omega2,
+						omegaSign2 * omega3,
+						omegaSign3 * omega1
+				};
+			}	
+			if (i2 < i1 && i1 < i3) { //CAS 6
+				omegaSign1 = -1.0;
+				omegaSign2 = 1.0;
+				omegaSign3 = 1.0;
+				
+				return new double[] {
+						omegaSign1 * omega3,
+						omegaSign2 * omega1,
+						omegaSign3 * omega2
+				};
+			}
+			if (i2 < i3 && i3 < i1) {//CAS 8
+				omegaSign1 = 1.0;
+				omegaSign2 = -1.0;
+				omegaSign3 = 1.0;
+				
+				return new double[] {
+						omegaSign1 * omega2,
+						omegaSign2 * omega3,
+						omegaSign3 * omega1
+				};
+			}
+			if (i3 < i1 && i1 < i2) { //CAS 10
+				omegaSign1 = 1.0;
+				omegaSign2 = -1.0;
+				omegaSign3 = 1.0;
+				
+				return new double[] {
+						omegaSign1 * omega1,
+						omegaSign2 * omega2,
+						omegaSign3 * omega3
+				};
+			}
+			if (i3 < i2 && i2 < i1) { //CAS 12
+				omegaSign1 = -1.0;
+				omegaSign2 = -1.0;
+				omegaSign3 = -1.0;
+				
+				return new double[] {
+						omegaSign1 * omega1,
+						omegaSign2 * omega2,
+						omegaSign3 * omega3
+				};
+			}
+		}
+		return new double[] {};
 	}
 
 }//Fin du programme
