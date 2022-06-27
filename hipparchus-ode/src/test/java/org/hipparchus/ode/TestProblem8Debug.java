@@ -62,7 +62,7 @@ public class TestProblem8Debug extends TestProblemAbstract {
     /**Offset rotation  between initial inertial frame and the frame with moment vector and Z axis aligned. */
     Rotation mAlignedToInert;
 
-    /** Initial converted rotation. */
+    /** Initial rotation. */
     final Rotation r0;
 
     /** Rotation to switch to the converted axes frame. */
@@ -120,7 +120,11 @@ public class TestProblem8Debug extends TestProblemAbstract {
 
     /**Offset rotation  between initial inertial frame and the frame with moment vector and Z axis aligned. */
     Rotation mAlignedToInertDEUX;
-
+    
+    /** Initial rotation. */
+    final Rotation r0DEUX;
+    
+    /** Rotation to switch to the converted axes frame. */
     final Rotation convertAxesDEUX;
 
     /**DenseOutputModel of phi. */
@@ -231,8 +235,7 @@ public class TestProblem8Debug extends TestProblemAbstract {
 
         // convert initial conditions to Euler angles such the M is aligned with Z in computation frame
         Vector3D omega0BodyDEUX = sortedDEUX.omega;
-        final Rotation r0DEUX = sortedDEUX.rotation;
-        //omega0BodyDEUX = new Vector3D (sortedDEUX.omega.getX(), sortedDEUX.omega.getY(), -sortedDEUX.omega.getZ());
+        r0DEUX = sortedDEUX.rotation;
         final Vector3D m0BodyDEUX     = new Vector3D(i1CDEUX * omega0BodyDEUX.getX(), i2CDEUX * omega0BodyDEUX.getY(), i3CDEUX * omega0BodyDEUX.getZ());
 
         final double   phi0DEUX       = 0; // this angle can be set arbitrarily, so 0 is a fair value (Eq. 37.13 - 37.14)

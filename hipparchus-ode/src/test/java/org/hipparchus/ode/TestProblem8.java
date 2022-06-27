@@ -167,6 +167,7 @@ public class TestProblem8 extends TestProblemAbstract {
         } else {
             condition = m2/twoE;
         }
+        System.out.println("Condition :"+condition);
 
         if (condition < iP[1]) {
             Vector3D z = axesP[0];
@@ -205,12 +206,12 @@ public class TestProblem8 extends TestProblemAbstract {
         final Rotation mAlignedToBody = new Rotation(RotationOrder.ZXZ, RotationConvention.FRAME_TRANSFORM,
                 phi0, theta0, psi0);
 
-        convertAxes = new Rotation( Vector3D.PLUS_I, Vector3D.PLUS_J, axesP[0], axesP[1] );
+        convertAxes = new Rotation( Vector3D.PLUS_I, Vector3D.PLUS_J, axes[0], axes[1] );
 
         Rotation r0ConvertedAxis = convertAxes.applyTo(r0);
 
         //Est-il nécéssaire de garder le r0COnvertedAxis qui n'est peut être pas adapté et ne règle peut être pas le problème
-        mAlignedToInert = r0ConvertedAxis.applyInverseTo(mAlignedToBody.revert());
+        mAlignedToInert = r0ConvertedAxis.applyInverseTo(mAlignedToBody);
         //mAlignedToInert = r0.applyInverseTo(mAlignedToBody);        
 
         i32  = i3C - i2C;
@@ -292,10 +293,7 @@ public class TestProblem8 extends TestProblemAbstract {
         final Vector3D omega    = convertAxes.applyInverseTo(omegaP);
         //Vector3D omega = new Vector3D(omegaF.getX(),-omegaF.getY(),-omegaF.getZ());
 
-        
-        final double bigK = LegendreEllipticIntegral.bigK(k2);
-        final double T = 4 * bigK * FastMath.sqrt( i1C * i2C * i3C / ((i3C - i2C) * (m2 - twoE * i1C)) );
-        System.out.println("TTTTTT = "+T);
+       
         
         // Computation of the Euler angles
         final double   psi       = FastMath.atan2(i1C * omegaP.getX(), i2C * omegaP.getY());
