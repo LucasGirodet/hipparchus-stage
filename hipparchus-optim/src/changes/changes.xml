@@ -49,8 +49,7 @@ If the output is not quite correct, check for invisible trailing spaces!
     <title>Hipparchus Optim Release Notes</title>
   </properties>
   <body>
-    <release version="2.1" date="2022-04-24" description="This is a maintenance release. The only
-    change is addition of ConvergenceCheckerOrMultiplexer and ConvergenceCheckerAndMultiplexer.">
+    <release version="2.1" date="TBD" description="TBD">
       <action dev="luc" type="add" issue="issue/136">
         Added ConvergenceCheckerOrMultiplexer and ConvergenceCheckerAndMultiplexer.
       </action>
