@@ -11,7 +11,6 @@ import org.hipparchus.special.elliptic.jacobi.JacobiEllipticBuilder;
 import org.hipparchus.special.elliptic.legendre.LegendreEllipticIntegral;
 import org.hipparchus.util.FastMath;
 
-
 public class TestProblem8 extends TestProblemAbstract {
 
 	/** Moments of inertia. */
