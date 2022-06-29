@@ -30,6 +30,9 @@ public class TestProblem8 extends TestProblemAbstract {
 
 	/** Initial state. */
 	final double[] y0;
+	
+	/** Initial time. */
+	final double t0;
 
 	/** Converted initial state. */
 	final double[] y0C;
@@ -108,10 +111,12 @@ public class TestProblem8 extends TestProblemAbstract {
 				new double[] { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 });
 		this.i1 = i1;
 		this.i2 = i2;
-		this.i3 = i3;     
+		this.i3 = i3;   
+		
+		this.t0 = t0;
 
 		y0 = getInitialState().getPrimaryState();
-
+		
 		final double o12 = y0[0] * y0[0];
 		final double o22 = y0[1] * y0[1];
 		final double o32 = y0[2] * y0[2];
@@ -242,17 +247,14 @@ public class TestProblem8 extends TestProblemAbstract {
 
 		jacobi = JacobiEllipticBuilder.build(k2);
 
-		if (y0C[1] == 0) {
-			tRef = t0;
-		} else {
-			tRef = t0 - jacobi.arcsn(y0C[1] / o2Scale) / tScale;
-		}
+
 
 		period             = 4 * LegendreEllipticIntegral.bigK(k2) / tScale;
 		phiSlope           = FastMath.sqrt(m2) / i3C;
 		phiQuadratureModel = computePhiQuadratureModel(t0);
 		integOnePeriod     = phiQuadratureModel.getInterpolatedState(phiQuadratureModel.getFinalTime()).getPrimaryState()[0];
-
+		
+		tRef = getTRef(t0);
 	}
 
 	private DenseOutputModel computePhiQuadratureModel(final double t0) {
@@ -417,7 +419,7 @@ public class TestProblem8 extends TestProblemAbstract {
 	}
 	
 	private double[] omega(double t) {
-		
+	
 		final double omegaSign1;
 		final double omegaSign2;
 		final double omegaSign3;
@@ -430,26 +432,34 @@ public class TestProblem8 extends TestProblemAbstract {
 		
 		final double condition = m2/twoE;
 		
-		if (condition > i2) {
+		final double cas;
+		
+		if (condition > i2C) {
 			if (i1 < i2 && i2 < i3) {//CAS 1
 				omegaSign1 = 1.0;
 				omegaSign2 = 1.0;
 				omegaSign3 = 1.0;
 				
+				cas = 1;
 				return new double[] {
 						omegaSign1 * omega1,
 						omegaSign2 * omega2,
-						omegaSign3 * omega3
+						omegaSign3 * omega3,
+						cas
 				};
 			}
 			if (i1 < i3 && i3 < i2) {//CAS 3 //Déphasage quand omega2 /= 0 //A REFAIRE
+				//Déphasage réglé lorsque tRef exprimé aves cn et omega1
 				omegaSign1 = 1.0;
-				omegaSign2 = -1.0;
+				omegaSign2 = 1.0;
 				omegaSign3 = 1.0;
+				
+				cas = 3;
 				return new double[] {
 						omegaSign1 * omega1,
 						omegaSign2 * omega2,
-						omegaSign3 * omega3
+						omegaSign3 * omega3,
+						cas
 				};
 			}	
 			if (i2 < i1 && i1 < i3) {//CAS 5
@@ -457,10 +467,12 @@ public class TestProblem8 extends TestProblemAbstract {
 				omegaSign2 = 1.0;
 				omegaSign3 = -1.0;
 				
+				cas = 5;
 				return new double[] {
 						omegaSign1 * omega1,
 						omegaSign2 * omega2,
-						omegaSign3 * omega3
+						omegaSign3 * omega3,
+						cas
 				};
 			}
 			if (i2 < i3 && i3 < i1) {//CAS 7
@@ -468,10 +480,12 @@ public class TestProblem8 extends TestProblemAbstract {
 				omegaSign2 = -1.0;
 				omegaSign3 = 1.0;
 				
+				cas = 7;
 				return new double[] {
 						omegaSign1 * omega2,
 						omegaSign2 * omega3,
-						omegaSign3 * omega1
+						omegaSign3 * omega1,
+						cas
 				};
 			}
 			if (i3 < i1 && i1 < i2) { //CAS 9 //Dephasage quand omega2 /= 0 //A REFAIRE 
@@ -479,10 +493,12 @@ public class TestProblem8 extends TestProblemAbstract {
 				omegaSign2 = -1.0;
 				omegaSign3 = 1.0;
 				
+				cas = 9;
 				return new double[] {
 						omegaSign1 * omega1,
 						omegaSign2 * omega2,
-						omegaSign3 * omega3
+						omegaSign3 * omega3,
+						cas
 				};
 			}
 			if (i3 < i2 && i2 < i1) { //CAS 11
@@ -490,33 +506,42 @@ public class TestProblem8 extends TestProblemAbstract {
 				omegaSign2 = 1.0;
 				omegaSign3 = -1.0;
 				
+				cas = 11;
 				return new double[] {
 						omegaSign1 * omega1,
 						omegaSign2 * omega2,
-						omegaSign3 * omega3
+						omegaSign3 * omega3,
+						cas
 				};
 			}
 		}
 		
-		if(condition < i2) {
+		if(condition < i2C) {
 			if (i1 < i2 && i2 < i3) { //CAS 2
 				omegaSign1 = 1.0;
 				omegaSign2 = -1.0;
 				omegaSign3 = 1.0;
+				
+				cas = 2;
 				return new double[] {
 						omegaSign1 * omega1,
 						omegaSign2 * omega2,
-						omegaSign3 * omega3
+						omegaSign3 * omega3,
+						cas
 				};
 			}
 			if (i1 < i3 && i3 < i2) {//CAS 4
+				System.out.println("ICI");
 				omegaSign1 = 1.0;
 				omegaSign2 = 1.0;
 				omegaSign3 = -1.0;
+				
+				cas = 4;
 				return new double[] {
 						omegaSign1 * omega2,
 						omegaSign2 * omega3,
-						omegaSign3 * omega1
+						omegaSign3 * omega1,
+						cas
 				};
 			}	
 			if (i2 < i1 && i1 < i3) { //CAS 6
@@ -524,10 +549,12 @@ public class TestProblem8 extends TestProblemAbstract {
 				omegaSign2 = 1.0;
 				omegaSign3 = 1.0;
 				
+				cas = 6;
 				return new double[] {
 						omegaSign1 * omega3,
 						omegaSign2 * omega1,
-						omegaSign3 * omega2
+						omegaSign3 * omega2,
+						cas
 				};
 			}
 			if (i2 < i3 && i3 < i1) {//CAS 8
@@ -535,10 +562,12 @@ public class TestProblem8 extends TestProblemAbstract {
 				omegaSign2 = -1.0;
 				omegaSign3 = 1.0;
 				
+				cas = 8;
 				return new double[] {
 						omegaSign1 * omega2,
 						omegaSign2 * omega3,
-						omegaSign3 * omega1
+						omegaSign3 * omega1,
+						cas
 				};
 			}
 			if (i3 < i1 && i1 < i2) { //CAS 10
@@ -546,25 +575,45 @@ public class TestProblem8 extends TestProblemAbstract {
 				omegaSign2 = -1.0;
 				omegaSign3 = 1.0;
 				
+				cas = 10;
 				return new double[] {
 						omegaSign1 * omega1,
 						omegaSign2 * omega2,
-						omegaSign3 * omega3
+						omegaSign3 * omega3,
+						cas
 				};
 			}
 			if (i3 < i2 && i2 < i1) { //CAS 12
 				omegaSign1 = -1.0;
 				omegaSign2 = -1.0;
 				omegaSign3 = -1.0;
-				
+			
+				cas = 12;
 				return new double[] {
 						omegaSign1 * omega1,
 						omegaSign2 * omega2,
-						omegaSign3 * omega3
+						omegaSign3 * omega3,
+						cas
 				};
 			}
+			
 		}
 		return new double[] {};
+	}
+	
+	private double getTRef(double t) {
+		
+		final double cas = omega(t)[3];
+		if (cas == 1 || cas == 2 || cas == 4 ||cas == 5 || cas == 6
+				|| cas == 7 ||cas == 8 || cas == 9 || cas == 10 ||cas == 11 ||cas == 12) {
+		return t0 - jacobi.arcsn(y0C[1] / o2Scale) / tScale;
+				}
+		
+		if (cas == 3) {
+		return t0 - jacobi.arccn(y0C[0] / o1Scale) / tScale;
+				}
+		
+		return 0;
 	}
 
 }//Fin du programme
