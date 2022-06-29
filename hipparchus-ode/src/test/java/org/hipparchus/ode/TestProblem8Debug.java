@@ -62,8 +62,8 @@ public class TestProblem8Debug extends TestProblemAbstract {
 	/**Offset rotation  between initial inertial frame and the frame with moment vector and Z axis aligned. */
 	Rotation mAlignedToInert;
 
-	/** Initial rotation. */
-	final Rotation r0Conv;
+    /** Initial converted rotation. */
+    final Rotation r0Conv;
 
 	/** Rotation to switch to the converted axes frame. */
 	final Rotation convertAxes;
@@ -121,8 +121,8 @@ public class TestProblem8Debug extends TestProblemAbstract {
 	/**Offset rotation  between initial inertial frame and the frame with moment vector and Z axis aligned. */
 	Rotation mAlignedToInertDEUX;
 
-	/** Initial rotation. */
-	final Rotation r0DEUX;
+	/** Initial converted rotation. */
+	final Rotation r0ConvDEUX;
 
 	/** Rotation to switch to the converted axes frame. */
 	final Rotation convertAxesDEUX;
@@ -192,7 +192,7 @@ public class TestProblem8Debug extends TestProblemAbstract {
 		i3C = sorted.i3;
 
 		// convert initial conditions to Euler angles such the M is aligned with Z in computation frame
-		final Vector3D omega0Body = sorted.omega;
+		final Vector3D omega0Body = new Vector3D(sorted.omega.getX() * sorted.omegaConfig.getX(), sorted.omega.getY() * sorted.omegaConfig.getY(), sorted.omega.getZ() * sorted.omegaConfig.getZ());
 		r0Conv         = sorted.rotation;
 		final Vector3D m0Body     = new Vector3D(i1C * omega0Body.getX(), i2C * omega0Body.getY(), i3C * omega0Body.getZ());
 
@@ -252,8 +252,9 @@ public class TestProblem8Debug extends TestProblemAbstract {
 		i3CDEUX = sortedDEUX.i3;
 
 		// convert initial conditions to Euler angles such the M is aligned with Z in computation frame
-		Vector3D omega0BodyDEUX = sortedDEUX.omega;
-		r0DEUX = sortedDEUX.rotation;
+		final Vector3D omega0BodyDEUX = new Vector3D(sortedDEUX.omega.getX() * sortedDEUX.omegaConfig.getX(), sortedDEUX.omega.getY() * sortedDEUX.omegaConfig.getY(), sortedDEUX.omega.getZ() * sortedDEUX.omegaConfig.getZ());
+
+		r0ConvDEUX = sortedDEUX.rotation;
 		final Vector3D m0BodyDEUX     = new Vector3D(i1CDEUX * omega0BodyDEUX.getX(), i2CDEUX * omega0BodyDEUX.getY(), i3CDEUX * omega0BodyDEUX.getZ());
 
 		final double   phi0DEUX       = 0; // this angle can be set arbitrarily, so 0 is a fair value (Eq. 37.13 - 37.14)
@@ -267,7 +268,7 @@ public class TestProblem8Debug extends TestProblemAbstract {
 		convertAxesDEUX = sortedDEUX.convertAxes;;
 
 		//final Rotation r0ConvertedAxisDEUX = sortedDEUX.rotation;
-		final Rotation r0ConvertedAxisDEUX = convertAxesDEUX.applyTo(r0DEUX);
+		final Rotation r0ConvertedAxisDEUX = convertAxesDEUX.applyTo(r0ConvDEUX);
 		mAlignedToInertDEUX = r0ConvertedAxisDEUX.applyInverseTo(mAlignedToBodyDEUX);
 		//mAlignedToInert = r0.applyInverseTo(mAlignedToBody);
 
@@ -303,19 +304,21 @@ public class TestProblem8Debug extends TestProblemAbstract {
 			final double m2Init, final double twoEInit,
 			final Vector3D omegaInit, final Rotation rInit) {
 
-		Sorted sorted = new Sorted(i1Init, i2Init, i3Init, omegaInit, rInit, Rotation.IDENTITY);
-
+		Vector3D omegaConfig = new Vector3D(1.0, 1.0, 1.0);
+		
+		Sorted sorted = new Sorted(i1Init, i2Init, i3Init, omegaInit, omegaConfig, rInit, Rotation.IDENTITY);
+System.out.println("Condition : "+m2Init / twoEInit);
 		if (sorted.i1 > sorted.i2) {
 			final Rotation ij = new Rotation(Vector3D.PLUS_I, Vector3D.PLUS_J, Vector3D.PLUS_J, Vector3D.PLUS_I);
 			sorted = new Sorted(sorted.i2, sorted.i1, sorted.i3, ij.applyTo(sorted.omega),
-					ij.applyTo(sorted.rotation), ij.applyTo(sorted.convertAxes));
+					omegaConfig, ij.applyTo(sorted.rotation), ij.applyTo(sorted.convertAxes));
 			System.out.println("Sorted omega 1  : "+sorted.omega);
 		}
 
 		if (sorted.i2 > sorted.i3) {
 			final Rotation jk = new Rotation(Vector3D.PLUS_J, Vector3D.PLUS_K, Vector3D.PLUS_K, Vector3D.PLUS_J);
-			sorted = new Sorted(sorted.i2, sorted.i1, sorted.i3, jk.applyTo(sorted.omega),
-					jk.applyTo(sorted.rotation), jk.applyTo(sorted.convertAxes));
+			sorted = new Sorted(sorted.i1, sorted.i3, sorted.i2, jk.applyTo(sorted.omega),
+					omegaConfig, jk.applyTo(sorted.rotation), jk.applyTo(sorted.convertAxes));
 			System.out.println("Sorted omega 2  : "+sorted.omega);
 
 		}
@@ -323,17 +326,23 @@ public class TestProblem8Debug extends TestProblemAbstract {
 		if (sorted.i1 > sorted.i2) {
 			final Rotation ij = new Rotation(Vector3D.PLUS_I, Vector3D.PLUS_J, Vector3D.PLUS_J, Vector3D.PLUS_I);
 			sorted = new Sorted(sorted.i2, sorted.i1, sorted.i3, ij.applyTo(sorted.omega),
-					ij.applyTo(sorted.rotation), ij.applyTo(sorted.convertAxes));
+					omegaConfig, ij.applyTo(sorted.rotation), ij.applyTo(sorted.convertAxes));
 			System.out.println("Sorted omega 3  : "+sorted.omega);
 		}
 
 		if (m2Init / twoEInit < sorted.i2) {
 			final Rotation ik = new Rotation(Vector3D.PLUS_I, Vector3D.PLUS_K, Vector3D.PLUS_K, Vector3D.PLUS_I);
-			sorted = new Sorted(sorted.i2, sorted.i1, sorted.i3, ik.applyTo(sorted.omega),
-					ik.applyTo(sorted.rotation), ik.applyTo(sorted.convertAxes));
+			sorted = new Sorted(sorted.i3, sorted.i2, sorted.i1, ik.applyTo(sorted.omega),
+					omegaConfig, ik.applyTo(sorted.rotation), ik.applyTo(sorted.convertAxes));
 			System.out.println("Sorted omega final  : "+sorted.omega);
 		}
 
+		omegaConfig = new Vector3D(1.0, 1.0, FastMath.copySign(1.0, sorted.omega.getZ()));
+		//double o3ScaleDEUXConv = FastMath.copySign(o3ScaleDEUX, sorted.omega.getZ());
+
+		sorted = new Sorted(sorted.i1, sorted.i2, sorted.i3, sorted.omega,
+					omegaConfig, sorted.rotation, sorted.convertAxes);
+		
 		return sorted;
 
 	}
@@ -508,16 +517,19 @@ public class TestProblem8Debug extends TestProblemAbstract {
 		private final double   i2;
 		private final double   i3;
 		private final Vector3D omega;
-		private final Rotation rotation;
+		private final Vector3D omegaConfig;
+        private final Rotation rotation;
 		private final Rotation convertAxes;
 		private Sorted(final double i1, final double i2, final double i3,
-				final Vector3D omega, final Rotation rotation, final Rotation convertAxes) {
+				final Vector3D omega, final Vector3D omegaConfig, final Rotation rotation, final Rotation convertAxes) {
 			this.i1              = i1;
 			this.i2              = i2;
 			this.i3              = i3;
 			this.omega           = omega;
+			this.omegaConfig     = omegaConfig;
 			this.rotation        = rotation;
 			this.convertAxes     = convertAxes;
+			
 		}
 	}
 
