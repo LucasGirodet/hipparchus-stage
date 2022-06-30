@@ -450,6 +450,7 @@ public class TestProblem8 extends TestProblemAbstract {
 			}
 			if (i1 < i3 && i3 < i2) {//CAS 3 //Déphasage quand omega2 /= 0 //A REFAIRE
 				//Déphasage réglé lorsque tRef exprimé aves cn et omega1
+
 				omegaSign1 = 1.0;
 				omegaSign2 = 1.0;
 				omegaSign3 = 1.0;
@@ -476,9 +477,10 @@ public class TestProblem8 extends TestProblemAbstract {
 				};
 			}
 			if (i2 < i3 && i3 < i1) {//CAS 7
-				omegaSign1 = -1.0;
+				//Problème avec les angles
+				omegaSign1 = 1.0;
 				omegaSign2 = -1.0;
-				omegaSign3 = 1.0;
+				omegaSign3 = -1.0;
 				
 				cas = 7;
 				return new double[] {
@@ -489,15 +491,17 @@ public class TestProblem8 extends TestProblemAbstract {
 				};
 			}
 			if (i3 < i1 && i1 < i2) { //CAS 9 //Dephasage quand omega2 /= 0 //A REFAIRE 
-				omegaSign1 = 1.0;
-				omegaSign2 = -1.0;
-				omegaSign3 = 1.0;
-				
+				//tjr déphasé même en changeant le tref
+				omegaSign1 = -1.0;
+				omegaSign2 = 1.0;
+				omegaSign3 = -1.0;
+				System.out.println("ICI");
+
 				cas = 9;
 				return new double[] {
-						omegaSign1 * omega1,
-						omegaSign2 * omega2,
-						omegaSign3 * omega3,
+						omegaSign1 * omega3,
+						omegaSign2 * omega1,
+						omegaSign3 * omega2,
 						cas
 				};
 			}
@@ -521,7 +525,7 @@ public class TestProblem8 extends TestProblemAbstract {
 				omegaSign1 = 1.0;
 				omegaSign2 = -1.0;
 				omegaSign3 = 1.0;
-				
+
 				cas = 2;
 				return new double[] {
 						omegaSign1 * omega1,
@@ -531,7 +535,6 @@ public class TestProblem8 extends TestProblemAbstract {
 				};
 			}
 			if (i1 < i3 && i3 < i2) {//CAS 4
-				System.out.println("ICI");
 				omegaSign1 = 1.0;
 				omegaSign2 = 1.0;
 				omegaSign3 = -1.0;
@@ -564,13 +567,14 @@ public class TestProblem8 extends TestProblemAbstract {
 				
 				cas = 8;
 				return new double[] {
-						omegaSign1 * omega2,
-						omegaSign2 * omega3,
-						omegaSign3 * omega1,
+						omegaSign1 * omega1,
+						omegaSign2 * omega2,
+						omegaSign3 * omega3,
 						cas
 				};
 			}
 			if (i3 < i1 && i1 < i2) { //CAS 10
+
 				omegaSign1 = 1.0;
 				omegaSign2 = -1.0;
 				omegaSign3 = 1.0;
@@ -584,8 +588,8 @@ public class TestProblem8 extends TestProblemAbstract {
 				};
 			}
 			if (i3 < i2 && i2 < i1) { //CAS 12
-				omegaSign1 = -1.0;
-				omegaSign2 = -1.0;
+				omegaSign1 = 1.0;
+				omegaSign2 = 1.0;
 				omegaSign3 = -1.0;
 			
 				cas = 12;
@@ -604,14 +608,17 @@ public class TestProblem8 extends TestProblemAbstract {
 	private double getTRef(double t) {
 		
 		final double cas = omega(t)[3];
-		if (cas == 1 || cas == 2 || cas == 4 ||cas == 5 || cas == 6
-				|| cas == 7 ||cas == 8 || cas == 9 || cas == 10 ||cas == 11 ||cas == 12) {
+		if (cas == 1  || cas == 4 || cas == 6|| cas == 9
+				 ||cas == 8  || cas == 10 ||cas == 11 ) {
 		return t0 - jacobi.arcsn(y0C[1] / o2Scale) / tScale;
 				}
 		
-		if (cas == 3) {
+		if (cas == 3 || cas == 2 ||cas == 12|| cas == 7 ){
 		return t0 - jacobi.arccn(y0C[0] / o1Scale) / tScale;
 				}
+		if (cas == 5) {
+			return t0 - jacobi.arcdn(y0C[2] / o3Scale) / tScale;
+		}
 		
 		return 0;
 	}
