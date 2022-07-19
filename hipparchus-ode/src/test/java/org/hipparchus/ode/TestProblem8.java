@@ -66,6 +66,7 @@ public class TestProblem8 extends TestProblemAbstract {
 
     /** Time reference for rotation rate. */
     final double tRef;
+    final double tRefSn;
 
     /**Offset rotation  between initial inertial frame and the frame with moment vector and Z axis aligned. */
     Rotation mAlignedToInert;
@@ -211,10 +212,10 @@ public class TestProblem8 extends TestProblemAbstract {
 
         // convert initial conditions to Euler angles such the M is aligned with Z in computation frame
         final Vector3D omega0Body = new Vector3D(y0C[0], y0C[1], y0C[2]);
-        r0Conv         = new Rotation(y0C[3], y0C[4], y0C[5], y0C[6], true);
+        r0Conv         = new Rotation(y0C[3], y0C[4], y0C[5], y0C[6], true); //Le quaternion n'a pas été converti, il est toujours comme au début
         final Vector3D m0Body     = new Vector3D(i1C * omega0Body.getX(), i2C * omega0Body.getY(), i3C * omega0Body.getZ());
 
-        final double   phi0       = 0; // this angle can be set arbitrarily, so 0 is a fair value (Eq. 37.13 - 37.14)
+        final double   phi0       = 11; // this angle can be set arbitrarily, so 0 is a fair value (Eq. 37.13 - 37.14)
         final double   theta0 =  FastMath.acos(m0Body.getZ() / m0Body.getNorm());
         final double   psi0       = FastMath.atan2(m0Body.getX(), m0Body.getY()); // it is really atan2(x, y), not atan2(y, x) as usual!
 
@@ -223,9 +224,11 @@ public class TestProblem8 extends TestProblemAbstract {
                 phi0, theta0, psi0);
 
         convertAxes = new Rotation( Vector3D.PLUS_I, Vector3D.PLUS_J, axes[0], axes[1] );
+        
 
-        Rotation r0ConvertedAxis = convertAxes.applyTo(r0Conv);
-
+//On doit donc convertir le quaternion ici, mais pourquoi inverse ?
+        Rotation r0ConvertedAxis = convertAxes.applyInverseTo(r0Conv); //Inverse ou pas ?? de base pas inverse je crois
+        Rotation r0test = convertAxes.applyTo(r0Conv);
         //Est-il nécéssaire de garder le r0COnvertedAxis qui n'est peut être pas adapté et ne règle peut être pas le problème
         mAlignedToInert = r0ConvertedAxis.applyInverseTo(mAlignedToBody);
         //mAlignedToInert = r0.applyInverseTo(mAlignedToBody);
@@ -239,11 +242,7 @@ public class TestProblem8 extends TestProblemAbstract {
         o2Scale = FastMath.sqrt((twoE * i3C - m2) / (i2C * i32));
         o3Scale = FastMath.sqrt((m2 - twoE * i1C) / (i3C * i31));
 
-        if (y0C[0] == 0 && y0C[1] == 0 && y0C[2] == 0) {
-            k2 = 0.0;
-        } else {
-            k2 = i21 * (twoE * i3C - m2) / (i32 * (m2 - twoE * i1C));
-        }
+        k2 = i21 * (twoE * i3C - m2) / (i32 * (m2 - twoE * i1C));
 
         jacobi = JacobiEllipticBuilder.build(k2);
 
@@ -255,6 +254,7 @@ public class TestProblem8 extends TestProblemAbstract {
         integOnePeriod     = phiQuadratureModel.getInterpolatedState(phiQuadratureModel.getFinalTime()).getPrimaryState()[0];
 
         tRef = getTRef(t0);
+        tRefSn = t0 - jacobi.arcsn(y0C[1] / o2Scale) / tScale;
     }
 
     private DenseOutputModel computePhiQuadratureModel(final double t0) {
@@ -298,9 +298,6 @@ public class TestProblem8 extends TestProblemAbstract {
     }
 
     public TfmState computeTorqueFreeMotion(double t) {
-
-        // Computation of omega
-        final CopolarN valuesN = jacobi.valuesN((t - tRef) * tScale);
 
         //final Vector3D omegaP   = new Vector3D(o1Scale * valuesN.cn(),-o2Scale * valuesN.sn(),o3Scale * valuesN.dn());
         final Vector3D omegaP = new Vector3D(omega(t)[0], omega(t)[1], omega(t)[2]);
@@ -448,7 +445,7 @@ public class TestProblem8 extends TestProblemAbstract {
                         cas
                 };
             }
-            if (i1 < i3 && i3 < i2) {//CAS 3 //Déphasage quand omega2 /= 0 //A REFAIRE
+            if (i1 < i3 && i3 < i2) {//CAS 3 //Déphasage quand omega2 /= 0
                 //Déphasage réglé lorsque tRef exprimé aves cn et omega1
 
                 omegaSign1 = 1.0;
@@ -490,8 +487,7 @@ public class TestProblem8 extends TestProblemAbstract {
                         cas
                 };
             }
-            if (i3 < i1 && i1 < i2) { //CAS 9 //Dephasage quand omega2 /= 0 //A REFAIRE
-                //tjr déphasé même en changeant le tref
+            if (i3 < i1 && i1 < i2) { //CAS 9
                 omegaSign1 = -1.0;
                 omegaSign2 = -1.0;
                 omegaSign3 = 1.0;
@@ -609,36 +605,19 @@ public class TestProblem8 extends TestProblemAbstract {
 
         final double cas = omega(t)[3];
         if (cas == 1  || cas == 4 || cas == 6
-                 ||cas == 8  || cas == 10 ||cas == 11 ) {
-        return t0 - jacobi.arcsn(y0C[1] / o2Scale) / tScale;
+                  ||cas == 8 || cas == 10 ||cas == 11 ) {;
+            return t0 - jacobi.arcsn(y0C[1] / o2Scale) / tScale;
                 }
 
         if (cas == 3 || cas == 12 || cas == 2|| cas == 9){
-        return t0 - jacobi.arccn(y0C[0] / o1Scale) / tScale;
+            return t0 - jacobi.arccn(y0C[0] / o1Scale) / tScale;
                 }
+        
         if (cas == 5||cas == 7) {
             return t0 - jacobi.arcdn(y0C[2] / o3Scale) / tScale;
         }
 
         return 0;
-//        Vector3D omega0Body = new Vector3D(y0C[0], y0C[1], y0C[2]);
-//        if (FastMath.abs(omega0Body.getX()) >= FastMath.abs(omega0Body.getY())) {
-//            if (omega0Body.getX() >= 0) {System.out.println("1");
-//                // omega is near +I
-//                return  t0 - jacobi.arcsn(+omega0Body.getY() / o2Scale) / tScale;
-//            } else {System.out.println("2");
-//                // omega is near -I
-//                return t0 - jacobi.arcsn(-omega0Body.getY() / o2Scale) / tScale - 0.5 * period;
-//            }
-//        } else {
-//            if (omega0Body.getY() >= 0) {System.out.println("3");
-//                // omega is near +J
-//                return t0 - jacobi.arccn(omega0Body.getX() / o1Scale) / tScale;
-//            } else {System.out.println("4");
-//                // omega is near -J
-//                return t0 - jacobi.arccn(omega0Body.getX() / o1Scale) / tScale + 0.5 * period;
-//            }
-//        }
 
     }
 
