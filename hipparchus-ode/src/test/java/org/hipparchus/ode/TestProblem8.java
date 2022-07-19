@@ -103,8 +103,7 @@ public class TestProblem8 extends TestProblemAbstract {
             final double i1, final double i2, final double i3) {
         //Arguments in the super constructor :
         //Initial time, Primary state (o1, o2, o3, q0, q1, q2, q3), Final time, Error scale
-        super(t0,
-                new double[] {
+        super(t0, new double[] {
                         omega0.getX(), omega0.getY(), omega0.getZ(),
                         r0.getQ0(), r0.getQ1(), r0.getQ2(), r0.getQ3()
         },
@@ -178,12 +177,8 @@ public class TestProblem8 extends TestProblemAbstract {
             y0P[2] = -y0P[2];
         }
 
-        final double condition;
-        if ( y0P[0] == 0 && y0P[1] == 0 && y0P[2] == 0) {
-            condition = 0.0;
-        } else {
-            condition = m2/twoE;
-        }
+
+        final double condition = m2/twoE;
         System.out.println("Condition :"+condition);
 
         if (condition < iP[1]) {
@@ -215,7 +210,7 @@ public class TestProblem8 extends TestProblemAbstract {
         r0Conv         = new Rotation(y0C[3], y0C[4], y0C[5], y0C[6], true); //Le quaternion n'a pas été converti, il est toujours comme au début
         final Vector3D m0Body     = new Vector3D(i1C * omega0Body.getX(), i2C * omega0Body.getY(), i3C * omega0Body.getZ());
 
-        final double   phi0       = 11; // this angle can be set arbitrarily, so 0 is a fair value (Eq. 37.13 - 37.14)
+        final double   phi0       = 0.0; // this angle can be set arbitrarily, so 0 is a fair value (Eq. 37.13 - 37.14)
         final double   theta0 =  FastMath.acos(m0Body.getZ() / m0Body.getNorm());
         final double   psi0       = FastMath.atan2(m0Body.getX(), m0Body.getY()); // it is really atan2(x, y), not atan2(y, x) as usual!
 
@@ -228,8 +223,7 @@ public class TestProblem8 extends TestProblemAbstract {
 
 //On doit donc convertir le quaternion ici, mais pourquoi inverse ?
         Rotation r0ConvertedAxis = convertAxes.applyInverseTo(r0Conv); //Inverse ou pas ?? de base pas inverse je crois
-        Rotation r0test = convertAxes.applyTo(r0Conv);
-        //Est-il nécéssaire de garder le r0COnvertedAxis qui n'est peut être pas adapté et ne règle peut être pas le problème
+
         mAlignedToInert = r0ConvertedAxis.applyInverseTo(mAlignedToBody);
         //mAlignedToInert = r0.applyInverseTo(mAlignedToBody);
 
@@ -246,15 +240,13 @@ public class TestProblem8 extends TestProblemAbstract {
 
         jacobi = JacobiEllipticBuilder.build(k2);
 
-
-
         period             = 4 * LegendreEllipticIntegral.bigK(k2) / tScale;
         phiSlope           = FastMath.sqrt(m2) / i3C;
         phiQuadratureModel = computePhiQuadratureModel(t0);
         integOnePeriod     = phiQuadratureModel.getInterpolatedState(phiQuadratureModel.getFinalTime()).getPrimaryState()[0];
-
-        tRef = getTRef(t0);
+       
         tRefSn = t0 - jacobi.arcsn(y0C[1] / o2Scale) / tScale;
+        tRef = getTRef(t0);
     }
 
     private DenseOutputModel computePhiQuadratureModel(final double t0) {
