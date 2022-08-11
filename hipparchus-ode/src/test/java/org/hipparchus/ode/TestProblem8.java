@@ -10,6 +10,7 @@ import org.hipparchus.special.elliptic.jacobi.JacobiElliptic;
 import org.hipparchus.special.elliptic.jacobi.JacobiEllipticBuilder;
 import org.hipparchus.special.elliptic.legendre.LegendreEllipticIntegral;
 import org.hipparchus.util.FastMath;
+import org.junit.Assert;
 
 public class TestProblem8 extends TestProblemAbstract {
 
@@ -66,7 +67,6 @@ public class TestProblem8 extends TestProblemAbstract {
 
     /** Time reference for rotation rate. */
     final double tRef;
-    final double tRefSn;
 
     /**Offset rotation  between initial inertial frame and the frame with moment vector and Z axis aligned. */
     Rotation mAlignedToInert;
@@ -104,8 +104,8 @@ public class TestProblem8 extends TestProblemAbstract {
         //Arguments in the super constructor :
         //Initial time, Primary state (o1, o2, o3, q0, q1, q2, q3), Final time, Error scale
         super(t0, new double[] {
-                        omega0.getX(), omega0.getY(), omega0.getZ(),
-                        r0.getQ0(), r0.getQ1(), r0.getQ2(), r0.getQ3()
+                omega0.getX(), omega0.getY(), omega0.getZ(),
+                r0.getQ0(), r0.getQ1(), r0.getQ2(), r0.getQ3()
         },
                 t1,
                 new double[] { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 });
@@ -179,7 +179,6 @@ public class TestProblem8 extends TestProblemAbstract {
 
 
         final double condition = m2/twoE;
-        System.out.println("Condition :"+condition);
 
         if (condition < iP[1]) {
             Vector3D z = axesP[0];
@@ -202,30 +201,9 @@ public class TestProblem8 extends TestProblemAbstract {
         i3C = iP[2];
 
         axes = axesP;
+        convertAxes = new Rotation(Vector3D.PLUS_I, Vector3D.PLUS_J, axes[0], axes[1]);
 
         y0C = y0P.clone();
-
-        // convert initial conditions to Euler angles such the M is aligned with Z in computation frame
-        final Vector3D omega0Body = new Vector3D(y0C[0], y0C[1], y0C[2]);
-        r0Conv         = new Rotation(y0C[3], y0C[4], y0C[5], y0C[6], true); //Le quaternion n'a pas été converti, il est toujours comme au début
-        final Vector3D m0Body     = new Vector3D(i1C * omega0Body.getX(), i2C * omega0Body.getY(), i3C * omega0Body.getZ());
-
-        final double   phi0       = 0.0; // this angle can be set arbitrarily, so 0 is a fair value (Eq. 37.13 - 37.14)
-        final double   theta0 =  FastMath.acos(m0Body.getZ() / m0Body.getNorm());
-        final double   psi0       = FastMath.atan2(m0Body.getX(), m0Body.getY()); // it is really atan2(x, y), not atan2(y, x) as usual!
-
-        //Compute offset rotation between inertial frame aligned with momentum and regular inertial frame
-        final Rotation mAlignedToBody = new Rotation(RotationOrder.ZXZ, RotationConvention.FRAME_TRANSFORM,
-                phi0, theta0, psi0);
-
-        convertAxes = new Rotation( Vector3D.PLUS_I, Vector3D.PLUS_J, axes[0], axes[1] );
-        
-
-//On doit donc convertir le quaternion ici, mais pourquoi inverse ?
-        Rotation r0ConvertedAxis = convertAxes.applyInverseTo(r0Conv); //Inverse ou pas ?? de base pas inverse je crois
-
-        mAlignedToInert = r0ConvertedAxis.applyInverseTo(mAlignedToBody);
-        //mAlignedToInert = r0.applyInverseTo(mAlignedToBody);
 
         i32  = i3C - i2C;
         i31  = i3C - i1C;
@@ -240,15 +218,37 @@ public class TestProblem8 extends TestProblemAbstract {
 
         jacobi = JacobiEllipticBuilder.build(k2);
 
+        // convert initial conditions to Euler angles such the M is aligned with Z in computation frame
+        final Vector3D omega0Body = new Vector3D(y0C[0], y0C[1], y0C[2]);
+
+        r0Conv         = new Rotation(y0C[3], y0C[4], y0C[5], y0C[6], true); //Initial quaternion
+        final Vector3D m0Body = new Vector3D(i1C * omega0Body.getX(), i2C * omega0Body.getY(), i3C * omega0Body.getZ());
+
+        final double   theta0 =  FastMath.acos(m0Body.getZ() / m0Body.getNorm());
+        final double   psi0       = FastMath.atan2(m0Body.getX(), m0Body.getY()); // it is really atan2(x, y), not atan2(y, x) as usual!
+        final double   phi0       = 0.0; // this angle can be set arbitrarily, so 0 is a fair value (Eq. 37.13 - 37.14)
+
+        //Compute offset rotation between inertial frame aligned with momentum and regular inertial frame
+        final Rotation mAlignedToBody = new Rotation(RotationOrder.ZXZ, RotationConvention.FRAME_TRANSFORM,
+                phi0, theta0, psi0);
+
+        Rotation r0ConvertedAxis = convertAxes.applyInverseTo(r0Conv);
+
+        mAlignedToInert = r0ConvertedAxis.applyInverseTo(mAlignedToBody);
+
         period             = 4 * LegendreEllipticIntegral.bigK(k2) / tScale;
         phiSlope           = FastMath.sqrt(m2) / i3C;
         phiQuadratureModel = computePhiQuadratureModel(t0);
         integOnePeriod     = phiQuadratureModel.getInterpolatedState(phiQuadratureModel.getFinalTime()).getPrimaryState()[0];
-       
-        tRefSn = t0 - jacobi.arcsn(y0C[1] / o2Scale) / tScale;
+
         tRef = getTRef(t0);
     }
 
+    /** Provide a DenseOutputModel of phi quadrature to allow interpolation.
+     *
+     * @param t0
+     * @return phiQuadratureModel
+     */
     private DenseOutputModel computePhiQuadratureModel(final double t0) {
 
         final double i32 = i3C - i2C;
@@ -288,24 +288,26 @@ public class TestProblem8 extends TestProblemAbstract {
         return model;
 
     }
-
+    /** Compute the tfmState elements.
+     *
+     * @param t
+     * @return tfmState
+     */
     public TfmState computeTorqueFreeMotion(double t) {
 
-        //final Vector3D omegaP   = new Vector3D(o1Scale * valuesN.cn(),-o2Scale * valuesN.sn(),o3Scale * valuesN.dn());
-        final Vector3D omegaP = new Vector3D(omega(t)[0], omega(t)[1], omega(t)[2]);
-        final Vector3D omega    = convertAxes.applyInverseTo(omegaP);
+        final double[] omegaValues = omega(t);
+        final Vector3D omegaModified = new Vector3D(omegaValues[0], omegaValues[1], omegaValues[2]);//Omega after sortInertiaAxis and modified equations
+        final Vector3D omega    = convertAxes.applyInverseTo(omegaModified);//Omega with modified equations
 
-
-
-        // Computation of the Euler angles
-        final double   psi       = FastMath.atan2(i1C * omegaP.getX(), i2C * omegaP.getY());
-        final double   theta     = FastMath.acos(omegaP.getZ() / phiSlope);
-        final double   phiLinear = phiSlope * t;
+        // compute angles
+        final double psi         = FastMath.atan2(i1C * omegaModified.getX(), i2C * omegaModified.getY());
+        final double   theta         = FastMath.acos(omegaModified.getZ() / phiSlope);
+        final double   phiLinear     = phiSlope * t;
 
         // Integration for the computation of phi
         final double t0 = getInitialTime();
-        final int nbPeriods = (int) FastMath.floor((t - t0) / period);//floor = entier inférieur = nb période entière
-        final double tStartInteg = t0 + nbPeriods * period;//partie de période à la fin entre tau Integ et tau end
+        final int nbPeriods = (int) FastMath.floor((t - t0) / period);//floor = previous integer = complete period number
+        final double tStartInteg = t0 + nbPeriods * period;//part of the period between tau Integ and tau end
         final double integPartial = phiQuadratureModel.getInterpolatedState(t - tStartInteg).getPrimaryState()[0];// a vérifier, partie de l'intégrale apres le nb entier de période
         final double phiQuadrature = nbPeriods * integOnePeriod + integPartial;
 
@@ -322,9 +324,9 @@ public class TestProblem8 extends TestProblemAbstract {
         // Inert -> aligned + aligned -> body = inert -> body (What the user wants)
         Rotation inertToBody = alignedToBody.applyTo(mAlignedToInert.revert());
 
-        Rotation bodyToOriginalFrame = convertAxes.applyInverseTo(inertToBody);
+        Rotation originalFrameToBody = convertAxes.applyInverseTo(inertToBody);
 
-        return new TfmState(t, omega, bodyToOriginalFrame, phi, theta, psi, convertAxes, mAlignedToInert);
+        return new TfmState(t, omega, originalFrameToBody, phi, theta, psi, convertAxes, mAlignedToInert);
 
     }
 
@@ -360,6 +362,9 @@ public class TestProblem8 extends TestProblemAbstract {
         };
     }
 
+    /** Simple class that contain elements useful for the torque free motion problem.
+     *
+     */
     public static class TfmState {
         private final double   t;
         private final Vector3D omega;
@@ -407,7 +412,12 @@ public class TestProblem8 extends TestProblemAbstract {
         }
     }
 
-    private double[] omega(double t) {
+    /** Compute a frame that apply correction to the instantaneous rotation vector
+     *
+     * @param t
+     * @return omega the instantaneous rotation vector
+     */
+    public double[] omega(double t) {
 
         final double omegaSign1;
         final double omegaSign2;
@@ -424,7 +434,7 @@ public class TestProblem8 extends TestProblemAbstract {
         final double cas;
 
         if (condition > i2C) {
-            if (i1 < i2 && i2 < i3) {//CAS 1
+            if (i1 < i2 && i2 < i3) {//case 1 : i1 < i2 < condition < i3
                 omegaSign1 = 1.0;
                 omegaSign2 = 1.0;
                 omegaSign3 = 1.0;
@@ -437,8 +447,7 @@ public class TestProblem8 extends TestProblemAbstract {
                         cas
                 };
             }
-            if (i1 < i3 && i3 < i2) {//CAS 3 //Déphasage quand omega2 /= 0
-                //Déphasage réglé lorsque tRef exprimé aves cn et omega1
+            if (i1 < i3 && i3 < i2) {//case 3 : i1 < i3 < condition < i2
 
                 omegaSign1 = 1.0;
                 omegaSign2 = 1.0;
@@ -452,7 +461,7 @@ public class TestProblem8 extends TestProblemAbstract {
                         cas
                 };
             }
-            if (i2 < i1 && i1 < i3) {//CAS 5
+            if (i2 < i1 && i1 < i3) {//case 5 : i2 < i1 < condition < i3
                 omegaSign1 = -1.0;
                 omegaSign2 = 1.0;
                 omegaSign3 = -1.0;
@@ -465,8 +474,7 @@ public class TestProblem8 extends TestProblemAbstract {
                         cas
                 };
             }
-            if (i2 < i3 && i3 < i1) {//CAS 7
-                //Problème avec les angles
+            if (i2 < i3 && i3 < i1) {//case 7 : i2 < i3 < condition < i1
                 omegaSign1 = 1.0;
                 omegaSign2 = -1.0;
                 omegaSign3 = -1.0;
@@ -479,11 +487,10 @@ public class TestProblem8 extends TestProblemAbstract {
                         cas
                 };
             }
-            if (i3 < i1 && i1 < i2) { //CAS 9
+            if (i3 < i1 && i1 < i2) {//case 9 : i3 < i1 < condition < i2
                 omegaSign1 = -1.0;
                 omegaSign2 = -1.0;
                 omegaSign3 = 1.0;
-                System.out.println("ICII");
 
                 cas = 9;
                 return new double[] {
@@ -493,7 +500,7 @@ public class TestProblem8 extends TestProblemAbstract {
                         cas
                 };
             }
-            if (i3 < i2 && i2 < i1) { //CAS 11
+            if (i3 < i2 && i2 < i1) {//case 11 : i3 < i2 < condition < i1
                 omegaSign1 = -1.0;
                 omegaSign2 = 1.0;
                 omegaSign3 = -1.0;
@@ -509,7 +516,7 @@ public class TestProblem8 extends TestProblemAbstract {
         }
 
         if(condition < i2C) {
-            if (i1 < i2 && i2 < i3) { //CAS 2
+            if (i1 < i2 && i2 < i3) {//case 2 : i1 < condition < i2 < i3
                 omegaSign1 = 1.0;
                 omegaSign2 = -1.0;
                 omegaSign3 = 1.0;
@@ -522,7 +529,7 @@ public class TestProblem8 extends TestProblemAbstract {
                         cas
                 };
             }
-            if (i1 < i3 && i3 < i2) {//CAS 4
+            if (i1 < i3 && i3 < i2) {//case 4 : i1 < condition < i3 < i2
                 omegaSign1 = 1.0;
                 omegaSign2 = 1.0;
                 omegaSign3 = -1.0;
@@ -535,7 +542,7 @@ public class TestProblem8 extends TestProblemAbstract {
                         cas
                 };
             }
-            if (i2 < i1 && i1 < i3) { //CAS 6
+            if (i2 < i1 && i1 < i3) {//case 6 : i2 < condition < i1<  i3
                 omegaSign1 = -1.0;
                 omegaSign2 = 1.0;
                 omegaSign3 = 1.0;
@@ -548,7 +555,7 @@ public class TestProblem8 extends TestProblemAbstract {
                         cas
                 };
             }
-            if (i2 < i3 && i3 < i1) {//CAS 8
+            if (i2 < i3 && i3 < i1) {//case 8 : i2 < condition < i3 < i1
                 omegaSign1 = 1.0;
                 omegaSign2 = -1.0;
                 omegaSign3 = 1.0;
@@ -561,7 +568,7 @@ public class TestProblem8 extends TestProblemAbstract {
                         cas
                 };
             }
-            if (i3 < i1 && i1 < i2) { //CAS 10
+            if (i3 < i1 && i1 < i2) {//case 10 : i3 < condition < i1 < i2
 
                 omegaSign1 = 1.0;
                 omegaSign2 = -1.0;
@@ -575,7 +582,7 @@ public class TestProblem8 extends TestProblemAbstract {
                         cas
                 };
             }
-            if (i3 < i2 && i2 < i1) { //CAS 12
+            if (i3 < i2 && i2 < i1) {//case 12 : i3 < condition < i2 < i1
                 omegaSign1 = 1.0;
                 omegaSign2 = 1.0;
                 omegaSign3 = -1.0;
@@ -590,21 +597,26 @@ public class TestProblem8 extends TestProblemAbstract {
             }
 
         }
-        return new double[] {};
+        return new double[] {Double.NaN};
     }
 
+    /** Compute a time offset to modify the temporal origin of the problem.
+     *
+     * @param t
+     * @return tRef
+     */
     private double getTRef(double t) {
 
         final double cas = omega(t)[3];
         if (cas == 1  || cas == 4 || cas == 6
-                  ||cas == 8 || cas == 10 ||cas == 11 ) {;
-            return t0 - jacobi.arcsn(y0C[1] / o2Scale) / tScale;
-                }
+                ||cas == 8 || cas == 10 ||cas == 11 ) {;
+                return t0 - jacobi.arcsn(y0C[1] / o2Scale) / tScale;
+        }
 
         if (cas == 3 || cas == 12 || cas == 2|| cas == 9){
             return t0 - jacobi.arccn(y0C[0] / o1Scale) / tScale;
-                }
-        
+        }
+
         if (cas == 5||cas == 7) {
             return t0 - jacobi.arcdn(y0C[2] / o3Scale) / tScale;
         }
